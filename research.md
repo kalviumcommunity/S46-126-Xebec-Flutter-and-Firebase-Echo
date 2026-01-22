@@ -5,3 +5,7 @@ This research examines the foundational architecture of modern cross-platform mo
 Velavan's part for the day :
 
 Through this research, I personally gained a clearer understanding of how Flutter and Firebase integrate to form a complete mobile app ecosystem. I learned how Flutter’s reactive UI model simplifies state-driven interface design, while Firebase eliminates much of the traditional backend overhead through ready-made cloud services. This helped me better visualize real-world mobile app architecture and improved my confidence in designing scalable, cloud-connected applications for future projects.
+
+Sivaganesh Part:
+
+From a backend and platform standpoint, Firebase is not merely a database but a distributed control plane that governs application behavior at scale. By offloading identity, data consistency, and event driven logic to managed cloud services, Flutter clients becomes stateless consumers of real-time streams. This separation improves scalability, fault tolerance, and accelerates feature across multiple client platforms
