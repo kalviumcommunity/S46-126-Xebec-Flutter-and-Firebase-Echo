@@ -9,3 +9,7 @@ Through this research, I personally gained a clearer understanding of how Flutte
 Sivaganesh Part:
 
 From a backend and platform standpoint, Firebase is not merely a database but a distributed control plane that governs application behavior at scale. By offloading identity, data consistency, and event driven logic to managed cloud services, Flutter clients becomes stateless consumers of real-time streams. This separation improves scalability, fault tolerance, and accelerates feature across multiple client platforms
+
+Velavan's Part :
+
+From the client-system perspective, Flutter’s reactive rendering model ensures that UI state remains a pure function of application data, enabling predictable and performant updates without manual UI manipulation. Firebase complements this model by acting as the centralized decision layer in the cloud, managing authentication state, real-time synchronization, and serverless logic, allowing the client to focus solely on presentation and interaction.
