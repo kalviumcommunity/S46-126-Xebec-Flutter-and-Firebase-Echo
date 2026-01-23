@@ -17,3 +17,7 @@ From the client-system perspective, Flutter’s reactive rendering model ensures
 Velavan's Part 3 :
 
 Building on this architecture, today’s focus was on understanding how state flow and data ownership are clearly separated between the client and the backend. Flutter maintains transient UI state locally for responsiveness, while Firebase serves as the single source of truth for persistent and shared data. This separation simplifies debugging, reduces data inconsistencies, and ensures that real-time updates propagate efficiently across devices without tightly coupling the UI to backend logic.
+
+Sivaganesh part:
+
+From a product architecture perspective, combining Flutter and Firebase creates a clear separation between experience and behavior. Flutter encodes user experience as declarative UI logic, while Firebase centralizes application rules, identity, and data flow in the cloud. This architecture reduces client complexity, accelerates iteration, and ensures consistent behavior across platforms and releases.
