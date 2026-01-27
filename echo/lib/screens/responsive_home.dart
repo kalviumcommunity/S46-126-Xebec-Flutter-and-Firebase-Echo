@@ -69,17 +69,13 @@ class ResponsiveHome extends StatelessWidget {
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Welcome Section
-              _buildWelcomeSection(
-                context,
-                titleFontSize,
-                bodyFontSize,
-                isMobile,
-              ),
               _buildWelcomeSection(
                 context,
                 titleFontSize,
@@ -97,6 +93,11 @@ class ResponsiveHome extends StatelessWidget {
                 isTablet,
               ),
               SizedBox(height: isMobile ? 24 : 40),
+              _buildActionButtons(isMobile, isTablet),
+            ],
+          ),
+        ),
+      ),
       
       // Footer Section - Bottom Navigation for mobile, inline for desktop
       bottomNavigationBar: isMobile
@@ -114,6 +115,8 @@ class ResponsiveHome extends StatelessWidget {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person),
                   label: 'Profile',
+                ),
+              ],
             )
           : null,
     );
@@ -133,6 +136,7 @@ class ResponsiveHome extends StatelessWidget {
           colors: [Colors.blue, Colors.blueAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -174,6 +178,7 @@ class ResponsiveHome extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return GridView.builder(
+          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
@@ -183,6 +188,7 @@ class ResponsiveHome extends StatelessWidget {
           ),
           itemCount: stats.length,
           itemBuilder: (context, index) {
+            final stat = stats[index];
             return _buildStatCard(
               title: stat['title'] as String,
               value: stat['value'] as String,
@@ -213,6 +219,7 @@ class ResponsiveHome extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        children: [
           Icon(
             icon,
             size: isMobile ? 32 : 40,
@@ -283,6 +290,8 @@ class ResponsiveHome extends StatelessWidget {
                 runSpacing: 16,
                 children: [
                   SizedBox(
+                    width: (MediaQuery.of(context).size.width - (isTablet ? 96 : 192)) / 2,
+                    child: _buildProjectCard('Website Redesign', 'In Progress', Colors.blue, isMobile),
                   ),
                   SizedBox(
                     width: (MediaQuery.of(context).size.width - (isTablet ? 96 : 192)) / 2,
@@ -317,6 +326,7 @@ class ResponsiveHome extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
+      ),
       child: Row(
         children: [
           Expanded(
@@ -379,6 +389,7 @@ class ResponsiveHome extends StatelessWidget {
                 child: _buildButton('View All Projects', Icons.list, Colors.grey, false),
               ),
             ],
+          );
   }
 
   // Individual Button Widget
