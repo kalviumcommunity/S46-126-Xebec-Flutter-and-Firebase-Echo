@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:echo/config/theme.dart';
+import 'package:echo/screens/login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -22,7 +23,11 @@ class WelcomeScreen extends StatelessWidget {
             // Get Started Button
             ElevatedButton(
               onPressed: () {
-                // Navigation will be implemented as needed
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const LoginScreen(),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryBlue,
