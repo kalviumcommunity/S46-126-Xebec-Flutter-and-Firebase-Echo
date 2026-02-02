@@ -4,6 +4,8 @@ import 'package:echo/widgets/project_card.dart';
 import 'package:echo/screens/add_project_screen.dart';
 import 'package:echo/models/project_model.dart';
 import 'package:intl/intl.dart';
+import 'package:echo/services/firestore_service.dart';
+import 'package:echo/services/auth_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -14,86 +16,20 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
-  List<ProjectModel> _projects = [
-    ProjectModel(
-      id: '1',
-      clientName: 'Acme Corp',
-      projectTitle: 'Website Redesign',
-      deadline: DateTime(2026, 2, 15),
-      amount: 5000.0,
-      isCompleted: false,
-    ),
-    ProjectModel(
-      id: '2',
-      clientName: 'Tech Solutions',
-      projectTitle: 'Mobile App Development',
-      deadline: DateTime(2026, 3, 1),
-      amount: 8000.0,
-      isCompleted: false,
-    ),
-    ProjectModel(
-      id: '3',
-      clientName: 'Design Studio',
-      projectTitle: 'Logo Design',
-      deadline: DateTime(2026, 1, 30),
-      amount: 1500.0,
-      isCompleted: false,
-    ),
-    ProjectModel(
-      id: '4',
-      clientName: 'E-Shop Inc',
-      projectTitle: 'E-commerce Platform',
-      deadline: DateTime(2026, 3, 20),
-      amount: 12000.0,
-      isCompleted: false,
-    ),
-    ProjectModel(
-      id: '5',
-      clientName: 'Marketing Agency',
-      projectTitle: 'Social Media Campaign',
-      deadline: DateTime(2026, 2, 10),
-      amount: 3000.0,
-      isCompleted: false,
-    ),
-  ];
+  final _firestoreService = FirestoreService();
+  final _authService = AuthService();
 
   void _navigateToAddProject() async {
-    final result = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const AddProjectScreen(),
       ),
     );
-
-    if (result != null && result is ProjectModel) {
-      setState(() {
-        _projects.add(result);
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final padding = size.width > 600 ? 24.0 : 16.0;
-    final iconSize = size.width > 600 ? 40.0 : 32.0;
-    final titleFontSize = size.width > 600 ? 28.0 : 24.0;
-    final bodyFontSize = size.width > 600 ? 16.0 : 14.0;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppTheme.primaryBlue,
-        title: Text(
-          'Dashboard',
-          style: TextStyle(
-            fontSize: size.width > 600 ? 24 : 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ),
       body: Column(
         children: [
           Container(
@@ -175,7 +111,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ? Colors.white70 
                               : AppTheme.darkGrey.withOpacity(0.7),
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
@@ -205,7 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: AppTheme.primaryBlue,
                       fontSize: bodyFontSize,
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -263,11 +198,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           deadline: formattedDeadline,
                           index: index,
                         ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: projects.length,
+                        itemBuilder: (context, index) {
+                          final project = projects[index];
+                          final formattedDeadline = DateFormat('MMM dd, yyyy').format(project.deadline);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: ProjectCard(
+                              title: project.projectTitle,
+                              deadline: formattedDeadline,
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
       ),
       
       floatingActionButton: FloatingActionButton(
