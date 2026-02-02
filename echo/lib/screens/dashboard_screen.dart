@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:echo/config/theme.dart';
 import 'package:echo/widgets/project_card.dart';
 import 'package:echo/screens/add_project_screen.dart';
+import 'package:echo/models/project_model.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -12,12 +14,47 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
-  List<Map<String, String>> _projects = [
-    {'title': 'Website Redesign', 'deadline': 'Feb 15, 2026'},
-    {'title': 'Mobile App Development', 'deadline': 'Mar 1, 2026'},
-    {'title': 'Logo Design', 'deadline': 'Jan 30, 2026'},
-    {'title': 'E-commerce Platform', 'deadline': 'Mar 20, 2026'},
-    {'title': 'Social Media Campaign', 'deadline': 'Feb 10, 2026'},
+  List<ProjectModel> _projects = [
+    ProjectModel(
+      id: '1',
+      clientName: 'Acme Corp',
+      projectTitle: 'Website Redesign',
+      deadline: DateTime(2026, 2, 15),
+      amount: 5000.0,
+      isCompleted: false,
+    ),
+    ProjectModel(
+      id: '2',
+      clientName: 'Tech Solutions',
+      projectTitle: 'Mobile App Development',
+      deadline: DateTime(2026, 3, 1),
+      amount: 8000.0,
+      isCompleted: false,
+    ),
+    ProjectModel(
+      id: '3',
+      clientName: 'Design Studio',
+      projectTitle: 'Logo Design',
+      deadline: DateTime(2026, 1, 30),
+      amount: 1500.0,
+      isCompleted: false,
+    ),
+    ProjectModel(
+      id: '4',
+      clientName: 'E-Shop Inc',
+      projectTitle: 'E-commerce Platform',
+      deadline: DateTime(2026, 3, 20),
+      amount: 12000.0,
+      isCompleted: false,
+    ),
+    ProjectModel(
+      id: '5',
+      clientName: 'Marketing Agency',
+      projectTitle: 'Social Media Campaign',
+      deadline: DateTime(2026, 2, 10),
+      amount: 3000.0,
+      isCompleted: false,
+    ),
   ];
 
   void _navigateToAddProject() async {
@@ -28,12 +65,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
 
-    if (result != null && result is Map<String, dynamic>) {
+    if (result != null && result is ProjectModel) {
       setState(() {
-        _projects.add({
-          'title': result['projectTitle'],
-          'deadline': result['deadline'].toString(),
-        });
+        _projects.add(result);
       });
     }
   }
@@ -55,7 +89,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: Column(
         children: [
-          // Summary Card at the top
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(20),
@@ -69,7 +102,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // Total Earnings
                 Expanded(
                   child: Column(
                     children: [
@@ -100,14 +132,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 
-                // Divider
                 Container(
                   height: 60,
                   width: 1,
                   color: AppTheme.darkGrey.withOpacity(0.2),
                 ),
                 
-                // Pending Tasks
                 Expanded(
                   child: Column(
                     children: [
@@ -141,7 +171,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           
-          // Section Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -168,7 +197,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           
-          // ListView of ProjectCard widgets or Empty State
           Expanded(
             child: _projects.isEmpty
                 ? Center(
@@ -205,11 +233,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: _projects.length,
                     itemBuilder: (context, index) {
+                      final project = _projects[index];
+                      final formattedDeadline = DateFormat('MMM dd, yyyy').format(project.deadline);
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: ProjectCard(
-                          title: _projects[index]['title']!,
-                          deadline: _projects[index]['deadline']!,
+                          title: project.projectTitle,
+                          deadline: formattedDeadline,
                         ),
                       );
                     },
@@ -218,14 +248,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       
-      // Floating Action Button
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAddProject,
         backgroundColor: AppTheme.primaryBlue,
         child: const Icon(Icons.add, color: Colors.white),
       ),
       
-      // BottomNavigationBar UI
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         selectedItemColor: AppTheme.primaryBlue,

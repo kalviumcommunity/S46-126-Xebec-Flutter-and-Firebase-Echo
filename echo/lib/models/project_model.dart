@@ -17,7 +17,6 @@ class ProjectModel {
     required this.isCompleted,
   });
 
-  // Convert ProjectModel to Map for Firestore
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -29,7 +28,6 @@ class ProjectModel {
     };
   }
 
-  // Create ProjectModel from Firestore Map
   factory ProjectModel.fromMap(Map<String, dynamic> map) {
     return ProjectModel(
       id: map['id'] ?? '',
@@ -41,13 +39,11 @@ class ProjectModel {
     );
   }
 
-  // Create ProjectModel from Firestore DocumentSnapshot
   factory ProjectModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return ProjectModel.fromMap(data);
   }
 
-  // CopyWith method for updating instances
   ProjectModel copyWith({
     String? id,
     String? clientName,
