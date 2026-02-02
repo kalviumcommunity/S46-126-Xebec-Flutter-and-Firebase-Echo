@@ -74,14 +74,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final padding = size.width > 600 ? 24.0 : 16.0;
+    final iconSize = size.width > 600 ? 40.0 : 32.0;
+    final titleFontSize = size.width > 600 ? 28.0 : 24.0;
+    final bodyFontSize = size.width > 600 ? 16.0 : 14.0;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppTheme.primaryBlue,
-        title: const Text(
+        title: Text(
           'Dashboard',
           style: TextStyle(
-            fontSize: 20,
+            fontSize: size.width > 600 ? 24 : 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -90,8 +97,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: Column(
         children: [
           Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(20),
+            margin: EdgeInsets.all(padding),
+            padding: EdgeInsets.all(size.width > 600 ? 24 : 20),
             decoration: BoxDecoration(
               color: AppTheme.primaryBlue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
@@ -107,24 +114,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Icon(
                         Icons.attach_money,
-                        size: 32,
+                        size: iconSize,
                         color: AppTheme.primaryBlue,
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: padding / 2),
                       Text(
                         '\$15,000',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: titleFontSize,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.darkGrey,
+                          color: isDarkMode ? Colors.white : AppTheme.darkGrey,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: padding / 4),
                       Text(
                         'Total Earnings',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.darkGrey.withOpacity(0.7),
+                          fontSize: bodyFontSize,
+                          color: isDarkMode 
+                              ? Colors.white70 
+                              : AppTheme.darkGrey.withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -135,7 +144,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   height: 60,
                   width: 1,
-                  color: AppTheme.darkGrey.withOpacity(0.2),
+                  color: isDarkMode 
+                      ? Colors.white24 
+                      : AppTheme.darkGrey.withOpacity(0.2),
                 ),
                 
                 Expanded(
@@ -143,24 +154,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Icon(
                         Icons.task_alt,
-                        size: 32,
+                        size: iconSize,
                         color: AppTheme.primaryBlue,
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: padding / 2),
                       Text(
                         '8',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: titleFontSize,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.darkGrey,
+                          color: isDarkMode ? Colors.white : AppTheme.darkGrey,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: padding / 4),
                       Text(
                         'Pending Tasks',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.darkGrey.withOpacity(0.7),
+                          fontSize: bodyFontSize,
+                          color: isDarkMode 
+                              ? Colors.white70 
+                              : AppTheme.darkGrey.withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -172,16 +185,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding / 2),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Recent Projects',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: size.width > 600 ? 22 : 18,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.darkGrey,
+                    color: isDarkMode ? Colors.white : AppTheme.darkGrey,
                   ),
                 ),
                 TextButton(
@@ -190,6 +203,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     'View All',
                     style: TextStyle(
                       color: AppTheme.primaryBlue,
+                      fontSize: bodyFontSize,
                     ),
                   ),
                 ),
@@ -200,46 +214,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Expanded(
             child: _projects.isEmpty
                 ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.work_off_outlined,
-                          size: 120,
-                          color: AppTheme.darkGrey.withOpacity(0.3),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'No Projects Yet',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.darkGrey,
+                    child: Padding(
+                      padding: EdgeInsets.all(padding),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.work_off_outlined,
+                            size: size.width > 600 ? 140 : 120,
+                            color: isDarkMode 
+                                ? Colors.white24 
+                                : AppTheme.darkGrey.withOpacity(0.3),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Tap the + button to add your first project',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: AppTheme.darkGrey.withOpacity(0.6),
+                          SizedBox(height: padding * 1.5),
+                          Text(
+                            'No Projects Yet',
+                            style: TextStyle(
+                              fontSize: titleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode ? Colors.white : AppTheme.darkGrey,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                          SizedBox(height: padding / 2),
+                          Text(
+                            'Tap the + button to add your first project',
+                            style: TextStyle(
+                              fontSize: bodyFontSize,
+                              color: isDarkMode 
+                                  ? Colors.white60 
+                                  : AppTheme.darkGrey.withOpacity(0.6),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: padding),
                     itemCount: _projects.length,
                     itemBuilder: (context, index) {
                       final project = _projects[index];
                       final formattedDeadline = DateFormat('MMM dd, yyyy').format(project.deadline);
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: EdgeInsets.only(bottom: padding * 0.75),
                         child: ProjectCard(
                           title: project.projectTitle,
                           deadline: formattedDeadline,
+                          index: index,
                         ),
                       );
                     },
