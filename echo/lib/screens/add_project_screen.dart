@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:echo/config/theme.dart';
 import 'package:intl/intl.dart';
+import 'package:echo/services/firestore_service.dart';
+import 'package:echo/services/auth_service.dart';
+import 'package:echo/models/project_model.dart';
 
 class AddProjectScreen extends StatefulWidget {
   const AddProjectScreen({super.key});
@@ -13,12 +16,17 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
   final _formKey = GlobalKey<FormState>();
   final _clientNameController = TextEditingController();
   final _projectTitleController = TextEditingController();
+  final _amountController = TextEditingController();
   DateTime? _selectedDeadline;
+  final _firestoreService = FirestoreService();
+  final _authService = AuthService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _clientNameController.dispose();
     _projectTitleController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
@@ -49,7 +57,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
     }
   }
 
-  void _saveProject() {
+  Future<void> _saveProject() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedDeadline == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -61,20 +69,57 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
         return;
       }
 
-      // TODO: Save project to database
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Project added successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      final user = _authService.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
-      // Navigate back to dashboard
-      Navigator.pop(context, {
-        'clientName': _clientNameController.text,
-        'projectTitle': _projectTitleController.text,
-        'deadline': _selectedDeadline,
+      setState(() {
+        _isLoading = true;
       });
+
+      try {
+        final projectId = await _firestoreService.addProject(
+          userId: user.uid,
+          clientName: _clientNameController.text.trim(),
+          projectTitle: _projectTitleController.text.trim(),
+          deadline: _selectedDeadline!,
+          amount: double.parse(_amountController.text),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Project added successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate back to dashboard
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -167,6 +212,46 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               ),
               const SizedBox(height: 20),
 
+              // Amount Field
+              TextFormField(
+                controller: _amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Amount',
+                  hintText: 'Enter project amount',
+                  prefixIcon: const Icon(Icons.attach_money),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppTheme.darkGrey.withOpacity(0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppTheme.primaryBlue,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter amount';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  if (double.parse(value) <= 0) {
+                    return 'Amount must be greater than 0';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+
               // Deadline Picker
               InkWell(
                 onTap: () => _selectDeadline(context),
@@ -212,7 +297,7 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _saveProject,
+                  onPressed: _isLoading ? null : _saveProject,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryBlue,
                     foregroundColor: Colors.white,
@@ -221,13 +306,22 @@ class _AddProjectScreenState extends State<AddProjectScreen> {
                     ),
                     elevation: 2,
                   ),
-                  child: const Text(
-                    'Add Project',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Add Project',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
