@@ -1,91 +1,94 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../models/client_model.dart';
 import '../models/project_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String _projectsCollection = 'projects';
 
-  /// Adds a new project to the 'projects' collection
-  /// Returns the document ID of the newly created project
+  CollectionReference<Map<String, dynamic>> _projectsRef() {
+    return _firestore.collection('projects');
+  }
+
+  CollectionReference<Map<String, dynamic>> _clientsRef() {
+    return _firestore.collection('clients');
+  }
+
   Future<String> addProject({
     required String userId,
     required String clientName,
     required String projectTitle,
     required DateTime deadline,
     required double amount,
-    bool isCompleted = false,
+    ProjectStatus status = ProjectStatus.toDo,
   }) async {
-    try {
-      final docRef = await _firestore.collection(_projectsCollection).add({
-        'userId': userId,
-        'clientName': clientName,
-        'projectTitle': projectTitle,
-        'deadline': Timestamp.fromDate(deadline),
-        'amount': amount,
-        'isCompleted': isCompleted,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      
-      // Update the document with its own ID
-      await docRef.update({'id': docRef.id});
-      
-      return docRef.id;
-    } catch (e) {
-      throw Exception('Failed to add project: $e');
-    }
+    final docRef = _projectsRef().doc();
+    final project = ProjectModel(
+      id: docRef.id,
+      clientName: clientName,
+      projectTitle: projectTitle,
+      deadline: deadline,
+      amount: amount,
+      status: status,
+    );
+    final payload = project.toMap();
+    payload['userId'] = userId;
+    await docRef.set(payload);
+    return docRef.id;
   }
 
-  /// Returns a Stream of List<ProjectModel> for the current user
-  /// The stream updates in real-time whenever the data changes in Firestore
   Stream<List<ProjectModel>> getProjectsStream(String userId) {
-    try {
-      return _firestore
-          .collection(_projectsCollection)
-          .where('userId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
-          .snapshots()
-          .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          final data = doc.data();
-          data['id'] = doc.id; // Ensure the ID is set
-          return ProjectModel.fromMap(data);
-        }).toList();
-      });
-    } catch (e) {
-      throw Exception('Failed to get projects stream: $e');
-    }
+    return _projectsRef()
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map(ProjectModel.fromFirestore).toList());
   }
 
-  /// Optional: Update an existing project
-  Future<void> updateProject(String projectId, Map<String, dynamic> updates) async {
-    try {
-      await _firestore.collection(_projectsCollection).doc(projectId).update(updates);
-    } catch (e) {
-      throw Exception('Failed to update project: $e');
-    }
+  Future<void> updateProject(
+    String userId,
+    String projectId,
+    Map<String, dynamic> updates,
+  ) async {
+    await _projectsRef().doc(projectId).update(updates);
   }
 
-  /// Optional: Delete a project
-  Future<void> deleteProject(String projectId) async {
-    try {
-      await _firestore.collection(_projectsCollection).doc(projectId).delete();
-    } catch (e) {
-      throw Exception('Failed to delete project: $e');
-    }
+  Future<void> deleteProject(String userId, String projectId) async {
+    await _projectsRef().doc(projectId).delete();
   }
 
-  /// Optional: Get a single project by ID
-  Future<ProjectModel?> getProjectById(String projectId) async {
-    try {
-      final doc = await _firestore.collection(_projectsCollection).doc(projectId).get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        data['id'] = doc.id;
-        return ProjectModel.fromMap(data);
-      }
-      return null;
-    } catch (e) {
-      throw Exception('Failed to get project: $e');
-    }
+  Future<String> addClient({
+    required String userId,
+    required String name,
+    required String email,
+    required String phone,
+    required String company,
+  }) async {
+    final docRef = _clientsRef().doc();
+    final client = ClientModel(
+      id: docRef.id,
+      name: name,
+      email: email,
+      phone: phone,
+      company: company,
+    );
+    final payload = client.toMap();
+    payload['userId'] = userId;
+    await docRef.set(payload);
+    return docRef.id;
+  }
+
+  Stream<List<ClientModel>> getClientsStream(String userId) {
+    return _clientsRef()
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map(ClientModel.fromFirestore).toList());
+  }
+
+  Future<void> deleteClient(String userId, String clientId) async {
+    await _clientsRef().doc(clientId).delete();
   }
 }

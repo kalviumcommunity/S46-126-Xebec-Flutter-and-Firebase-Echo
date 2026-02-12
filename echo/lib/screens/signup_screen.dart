@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:echo/config/theme.dart';
-import 'package:echo/services/auth_service.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/auth_provider.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -14,8 +15,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _authService = AuthService();
-  bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -27,283 +26,128 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
-    }
-    return null;
-  }
 
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your password';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    return null;
-  }
+    final authProvider = context.read<AuthProvider>();
+    final ok = await authProvider.signUp(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
 
-  String? _validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+    if (!mounted) {
+      return;
     }
-    if (value != _passwordController.text) {
-      return 'Passwords do not match';
+
+    if (ok) {
+      Navigator.of(context).pop();
+      return;
     }
-    return null;
-  }
 
-  Future<void> _handleSignUp() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        await _authService.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sign up successful!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.of(context).pop();
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(authProvider.errorMessage ?? 'Sign up failed')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+      appBar: AppBar(title: const Text('Create Account')),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo or App Name
-                  Icon(
-                    Icons.flutter_dash,
-                    size: 80,
-                    color: AppTheme.primaryBlue,
-                  ),
-                  const SizedBox(height: 24),
                   Text(
-                    'Create Account',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.darkGrey,
-                    ),
-                    textAlign: TextAlign.center,
+                    'Start using FreelanceFlow',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Sign up to get started',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.darkGrey.withOpacity(0.6),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
-
-                  // Email Field
+                  const SizedBox(height: 20),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    validator: _validateEmail,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Email',
-                      hintText: 'Enter your email',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppTheme.darkGrey.withOpacity(0.3),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppTheme.primaryBlue,
-                          width: 2,
-                        ),
-                      ),
+                      prefixIcon: Icon(Icons.email_outlined),
                     ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter email';
+                      }
+                      final emailRegex =
+                          RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
+                      if (!emailRegex.hasMatch(value.trim())) {
+                        return 'Enter valid email';
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 16),
-
-                  // Password Field
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    validator: _validatePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      hintText: 'Enter your password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppTheme.darkGrey.withOpacity(0.3),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppTheme.primaryBlue,
-                          width: 2,
-                        ),
+                        onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
+                        icon: Icon(_obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off),
                       ),
                     ),
+                    validator: (value) {
+                      if (value == null || value.length < 6) {
+                        return 'Password must be 6+ chars';
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 16),
-
-                  // Confirm Password Field
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
-                    validator: _validateConfirmPassword,
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
-                      hintText: 'Re-enter your password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureConfirmPassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
-                          });
-                        },
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppTheme.darkGrey.withOpacity(0.3),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppTheme.primaryBlue,
-                          width: 2,
-                        ),
+                        onPressed: () => setState(() =>
+                            _obscureConfirmPassword = !_obscureConfirmPassword),
+                        icon: Icon(_obscureConfirmPassword
+                            ? Icons.visibility
+                            : Icons.visibility_off),
                       ),
                     ),
+                    validator: (value) {
+                      if (value != _passwordController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 24),
-
-                  // Sign Up Button
+                  const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _handleSignUp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryBlue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: _isLoading
+                    onPressed: authProvider.isLoading ? null : _submit,
+                    child: authProvider.isLoading
                         ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Already have an account
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Already have an account? ',
-                        style: TextStyle(
-                          color: AppTheme.darkGrey.withOpacity(0.7),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Text(
-                          'Login',
-                          style: TextStyle(
-                            color: AppTheme.primaryBlue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                        : const Text('Sign Up'),
                   ),
                 ],
               ),

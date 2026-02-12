@@ -1,48 +1,61 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'config/theme.dart';
+import 'firebase_options.dart';
+import 'providers/auth_provider.dart';
+import 'providers/client_provider.dart';
+import 'providers/project_provider.dart';
+import 'providers/theme_provider.dart';
+import 'screens/dashboard_screen.dart';
 import 'screens/welcome_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e) {
-    print("Firebase initialization failed: $e");
-  }
-
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.light;
-
-  void _toggleTheme() {
-    setState(() {
-      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Echo',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: _themeMode,
-      home: WelcomeScreen(onThemeToggle: _toggleTheme),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => ProjectProvider()),
+        ChangeNotifierProvider(create: (_) => ClientProvider()),
+      ],
+      child: Consumer2<ThemeProvider, AuthProvider>(
+        builder: (context, themeProvider, authProvider, _) {
+          if (themeProvider.isLoading) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              home: Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(color: AppTheme.primaryBlue),
+                ),
+              ),
+            );
+          }
+
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'FreelanceFlow',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            home: authProvider.isAuthenticated
+                ? const DashboardScreen()
+                : const WelcomeScreen(),
+          );
+        },
+      ),
     );
   }
 }
