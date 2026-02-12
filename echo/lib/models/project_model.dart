@@ -1,21 +1,63 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum ProjectStatus { toDo, inProgress, paid }
+
+extension ProjectStatusX on ProjectStatus {
+  String get value {
+    switch (this) {
+      case ProjectStatus.toDo:
+        return 'toDo';
+      case ProjectStatus.inProgress:
+        return 'inProgress';
+      case ProjectStatus.paid:
+        return 'paid';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case ProjectStatus.toDo:
+        return 'To-Do';
+      case ProjectStatus.inProgress:
+        return 'In Progress';
+      case ProjectStatus.paid:
+        return 'Paid';
+    }
+  }
+
+  static ProjectStatus fromValue(String? value) {
+    switch (value) {
+      case 'inProgress':
+        return ProjectStatus.inProgress;
+      case 'paid':
+        return ProjectStatus.paid;
+      case 'toDo':
+      default:
+        return ProjectStatus.toDo;
+    }
+  }
+}
+
 class ProjectModel {
   final String id;
   final String clientName;
   final String projectTitle;
   final DateTime deadline;
   final double amount;
-  final bool isCompleted;
+  final ProjectStatus status;
+  final DateTime? createdAt;
 
-  ProjectModel({
+  const ProjectModel({
     required this.id,
     required this.clientName,
     required this.projectTitle,
     required this.deadline,
     required this.amount,
-    required this.isCompleted,
+    required this.status,
+    this.createdAt,
   });
+
+  bool get isPaid => status == ProjectStatus.paid;
 
   Map<String, dynamic> toMap() {
     return {
@@ -24,23 +66,40 @@ class ProjectModel {
       'projectTitle': projectTitle,
       'deadline': Timestamp.fromDate(deadline),
       'amount': amount,
-      'isCompleted': isCompleted,
+      'status': status.value,
+      'createdAt': createdAt == null
+          ? FieldValue.serverTimestamp()
+          : Timestamp.fromDate(createdAt!),
     };
   }
 
   factory ProjectModel.fromMap(Map<String, dynamic> map) {
+    final deadlineRaw = map['deadline'];
+    final createdAtRaw = map['createdAt'];
+
     return ProjectModel(
-      id: map['id'] ?? '',
-      clientName: map['clientName'] ?? '',
-      projectTitle: map['projectTitle'] ?? '',
-      deadline: (map['deadline'] as Timestamp).toDate(),
-      amount: (map['amount'] ?? 0).toDouble(),
-      isCompleted: map['isCompleted'] ?? false,
+      id: map['id']?.toString() ?? '',
+      clientName: map['clientName']?.toString() ?? '',
+      projectTitle: map['projectTitle']?.toString() ?? '',
+      deadline: deadlineRaw is Timestamp
+          ? deadlineRaw.toDate()
+          : deadlineRaw is DateTime
+              ? deadlineRaw
+              : DateTime.now(),
+      amount: (map['amount'] as num?)?.toDouble() ?? 0,
+      status: ProjectStatusX.fromValue(map['status']?.toString()),
+      createdAt: createdAtRaw is Timestamp
+          ? createdAtRaw.toDate()
+          : createdAtRaw is DateTime
+              ? createdAtRaw
+              : null,
     );
   }
 
-  factory ProjectModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory ProjectModel.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data() ?? <String, dynamic>{};
+    data['id'] = doc.id;
     return ProjectModel.fromMap(data);
   }
 
@@ -50,7 +109,8 @@ class ProjectModel {
     String? projectTitle,
     DateTime? deadline,
     double? amount,
-    bool? isCompleted,
+    ProjectStatus? status,
+    DateTime? createdAt,
   }) {
     return ProjectModel(
       id: id ?? this.id,
@@ -58,7 +118,8 @@ class ProjectModel {
       projectTitle: projectTitle ?? this.projectTitle,
       deadline: deadline ?? this.deadline,
       amount: amount ?? this.amount,
-      isCompleted: isCompleted ?? this.isCompleted,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

@@ -1,93 +1,84 @@
 import 'package:flutter/material.dart';
-import 'package:echo/config/theme.dart';
-import 'package:echo/screens/login_screen.dart';
+
+import '../config/theme.dart';
+import 'login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
-  final VoidCallback? onThemeToggle;
-  
-  const WelcomeScreen({super.key, this.onThemeToggle});
+  const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        actions: [
-          // Theme Toggle Switch
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Row(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? AppTheme.darkGradient
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF3D5AFE), Color(0xFF00B0FF)],
+                ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.wb_sunny,
-                  color: isDarkMode ? Colors.grey : AppTheme.primaryBlue,
-                  size: 20,
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                  ),
+                  child: const Icon(Icons.workspaces_rounded,
+                      size: 64, color: Colors.white),
                 ),
-                const SizedBox(width: 8),
-                Switch(
-                  value: isDarkMode,
-                  onChanged: (value) {
-                    if (onThemeToggle != null) {
-                      onThemeToggle!();
-                    }
-                  },
-                  activeColor: AppTheme.primaryBlue,
+                const SizedBox(height: 20),
+                const Text(
+                  'FreelanceFlow',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 42,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.nightlight_round,
-                  color: isDarkMode ? AppTheme.primaryBlue : Colors.grey,
-                  size: 20,
+                const SizedBox(height: 12),
+                Text(
+                  'Track projects, clients, earnings, and deadlines in one clean workspace.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    height: 1.4,
+                    fontSize: 16,
+                  ),
+                ),
+                const Spacer(),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppTheme.primaryBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('Get Started',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Centered Logo
-            Icon(
-              Icons.flutter_dash,
-              size: 120,
-              color: AppTheme.primaryBlue,
-            ),
-            const SizedBox(height: 40),
-            
-            // Get Started Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const LoginScreen(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryBlue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 48,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Get Started',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
